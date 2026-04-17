@@ -115,14 +115,16 @@ All 3 agents run on **Claude claude-sonnet-4-20250514** via Anthropic API.
 
 ```
 agentforge/
-├── README.md                  <- You are here
 ├── backend/
 │   ├── main.py                <- FastAPI app entry point
+│   ├── graph.py               <- LangGraph pipeline definition
 │   ├── agents/
 │   │   ├── classifier.py      <- Agent 1: intent + spec extraction
 │   │   ├── codegen.py         <- Agent 2: MCP server code generation
 │   │   └── validator.py       <- Agent 3: static validation
-│   ├── graph.py               <- LangGraph pipeline definition
+│   ├── utils/
+│   │   ├── logger.py          <- Structured logging utilities
+│   │   └── api_client.py      <- Anthropic API client with retry logic
 │   ├── prompts/
 │   │   ├── classifier.txt     <- System prompt for Classifier Agent
 │   │   ├── codegen.txt        <- System prompt for CodeGen Agent
@@ -131,14 +133,13 @@ agentforge/
 │       ├── base_server.py.j2  <- Jinja2 MCP server template
 │       └── config.json.j2     <- Claude Code config template
 ├── frontend/
-│   ├── src/
-│   │   ├── App.jsx
-│   │   └── components/
-│   │       ├── PromptInput.jsx
-│   │       ├── CodePreview.jsx
-│   │       └── StatusTracker.jsx
-│   └── package.json
-├── examples/
+│   └── src/
+│       ├── App.jsx
+│       └── components/
+│           ├── PromptInput.jsx
+│           ├── StatusTracker.jsx
+│           └── CodePreview.jsx
+├── examples/                  <- Wired into Fallback node
 │   ├── notion-search/         <- Pre-built example
 │   ├── github-issues/         <- Pre-built example
 │   └── web-scraper/           <- Pre-built example
