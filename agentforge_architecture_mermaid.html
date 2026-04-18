@@ -1,0 +1,89 @@
+
+<div id="mermaid-wrap" style="padding: 1rem 0; overflow-x: auto;"></div>
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: '"Anthropic Sans", sans-serif',
+  themeVariables: {
+    darkMode: dark,
+    fontSize: '13px',
+    fontFamily: '"Anthropic Sans", sans-serif',
+    primaryColor: dark ? '#3C3489' : '#EEEDFE',
+    primaryTextColor: dark ? '#CECBF6' : '#3C3489',
+    primaryBorderColor: dark ? '#534AB7' : '#AFA9EC',
+    secondaryColor: dark ? '#085041' : '#E1F5EE',
+    secondaryTextColor: dark ? '#9FE1CB' : '#085041',
+    secondaryBorderColor: dark ? '#0F6E56' : '#5DCAA5',
+    tertiaryColor: dark ? '#444441' : '#F1EFE8',
+    tertiaryTextColor: dark ? '#D3D1C7' : '#444441',
+    tertiaryBorderColor: dark ? '#888780' : '#B4B2A9',
+    lineColor: dark ? '#9c9a92' : '#73726c',
+    textColor: dark ? '#c2c0b6' : '#3d3d3a',
+    edgeLabelBackground: dark ? '#2C2C2A' : '#F1EFE8',
+    clusterBkg: dark ? '#26215C' : '#EEEDFE',
+    clusterBorder: dark ? '#534AB7' : '#AFA9EC',
+  },
+});
+
+const diagram = `
+flowchart TD
+    U(["👤 User\nPlain English Input"])
+
+    subgraph FE["Frontend — React + Tailwind"]
+        PI["Prompt Input\nForm"]
+        ST["Status Tracker\n3-step progress bar"]
+        CP["Code Preview\n+ Copy Button"]
+    end
+
+    subgraph BE["Backend — FastAPI + LangGraph"]
+        EP["/generate endpoint"]
+
+        subgraph PIPE["Agent Pipeline (LangGraph State Machine)"]
+            A1["🔍 Agent 1\nClassifier\nIntent + spec extraction"]
+            A2["⚙️ Agent 2\nCode Generator\nMCP server scaffolding"]
+            A3["✅ Agent 3\nValidator\nSchema + syntax check"]
+        end
+
+        FB["Fallback Templates\n(if validation fails)"]
+        LOG["Structured Logger\n(timestamp per step)"]
+    end
+
+    subgraph AI["Anthropic API"]
+        CLM["Claude claude-sonnet-4-20250514\n(all 3 agents)"]
+    end
+
+    subgraph OUT["Output Layer"]
+        SC["server.py\nGenerated MCP server"]
+        CFG["config.json\nClaude Code config"]
+        CMD["Setup command\n+ Claude Code snippet"]
+    end
+
+    subgraph CC["Claude Code — IDE"]
+        MCP["MCP Server\n(running & connected)"]
+        TOOL["New Tool Available\nto Claude"]
+    end
+
+    U --> PI
+    PI -->|"HTTP POST /generate"| EP
+    EP --> A1
+    A1 -->|"JSON spec"| A2
+    A2 -->|"generated code"| A3
+    A3 -->|"pass ✅"| OUT
+    A3 -->|"fail ❌"| FB
+    FB --> OUT
+    A1 & A2 & A3 <-->|"Claude API calls\n(3 retries + backoff)"| CLM
+    A1 & A2 & A3 --> LOG
+    EP -->|"poll status"| ST
+    OUT --> CP
+    SC & CFG --> MCP
+    CMD --> TOOL
+    MCP --> TOOL
+`;
+
+const { svg } = await mermaid.render('arch-svg', diagram);
+document.getElementById('mermaid-wrap').innerHTML = svg;
+</script>
