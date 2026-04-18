@@ -53,6 +53,16 @@ export function AuthProvider({ children }) {
     [supabase]
   );
 
+  const signInWithGoogle = useCallback(async () => {
+    if (!supabase) throw new Error("Auth not configured");
+    const redirectTo = `${window.location.origin}/auth/callback`;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo },
+    });
+    if (error) throw error;
+  }, [supabase]);
+
   const signOut = useCallback(async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
@@ -60,7 +70,9 @@ export function AuthProvider({ children }) {
   }, [supabase]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider
+      value={{ user, loading, signUp, signIn, signInWithGoogle, signOut }}
+    >
       {children}
     </AuthContext.Provider>
   );
