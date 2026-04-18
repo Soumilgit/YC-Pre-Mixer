@@ -2,7 +2,8 @@ import os
 import asyncio
 from typing import Optional
 
-from anthropic import AsyncAnthropic, APIError, RateLimitError, APIConnectionError
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 
 from backend.utils.logger import get_logger
@@ -10,23 +11,20 @@ from backend.utils.logger import get_logger
 load_dotenv()
 logger = get_logger("api_client")
 
-_client: Optional[AsyncAnthropic] = None
+_client: Optional[genai.Client] = None
 
 
-def get_client() -> AsyncAnthropic:
-    """Lazy singleton. Validates ANTHROPIC_API_KEY on first call."""
+def get_client() -> genai.Client:
+    """Lazy singleton. Validates GEMINI_API_KEY on first call."""
     global _client
     if _client is None:
-        api_key = os.getenv("ANTHROPIC_API_KEY")
+        api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise EnvironmentError(
-                "ANTHROPIC_API_KEY is not set. "
+                "GEMINI_API_KEY is not set. "
                 "Copy .env.example to .env and fill in your key."
             )
-        _client = AsyncAnthropic(
-            api_key=api_key,
-            max_retries=0,  # We handle retries ourselves for logging
-        )
+        _client = genai.Client(api_key=api_key)
     return _client
 
 
@@ -38,11 +36,11 @@ async def call_llm(
     job_id: str = "",
 ) -> str:
     """
-    Call Claude with retry logic. Returns the text content of the response.
+    Call Gemini with retry logic. Returns the text content of the response.
     Raises after MAX_RETRIES exhausted.
     """
     client = get_client()
-    model = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
+    model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
     max_retries = int(os.getenv("MAX_RETRIES", "3"))
 
     for attempt in range(1, max_retries + 1):
@@ -51,20 +49,18 @@ async def call_llm(
                 f"LLM call attempt {attempt}/{max_retries}",
                 extra={"job_id": job_id, "step": "llm_call"},
             )
-            response = await client.messages.create(
+            response = await client.aio.models.generate_content(
                 model=model,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                system=system_prompt,
-                messages=[{"role": "user", "content": user_message}],
+                contents=user_message,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    max_output_tokens=max_tokens,
+                    temperature=temperature,
+                ),
             )
-            text = ""
-            for block in response.content:
-                if block.type == "text":
-                    text += block.text
-            return text.strip()
+            return response.text.strip()
 
-        except (RateLimitError, APIConnectionError, APIError) as e:
+        except Exception as e:
             if attempt == max_retries:
                 logger.error(
                     f"LLM call failed after {max_retries} attempts: {e}",

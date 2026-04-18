@@ -188,9 +188,9 @@ async def cleanup_stale_jobs():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    api_key = os.getenv("ANTHROPIC_API_KEY")
+    api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
-        logger.error("ANTHROPIC_API_KEY not set! /generate and /validate will fail.")
+        logger.error("GEMINI_API_KEY not set! /generate and /validate will fail.")
 
     log_level = os.getenv("LOG_LEVEL", "INFO")
     logger.setLevel(log_level)
@@ -258,10 +258,10 @@ EXAMPLES = [
 @app.post("/generate", response_model=GenerateResponse, status_code=202)
 async def generate(request: GenerateRequest):
     """Start the MCP server generation pipeline. Returns a job_id for polling."""
-    if not os.getenv("ANTHROPIC_API_KEY"):
+    if not os.getenv("GEMINI_API_KEY"):
         raise HTTPException(
             status_code=503,
-            detail="ANTHROPIC_API_KEY is not configured. Set it in .env and restart.",
+            detail="GEMINI_API_KEY is not configured. Set it in .env and restart.",
         )
 
     job_id = str(uuid.uuid4())
@@ -293,10 +293,10 @@ async def get_examples():
 @app.post("/validate", response_model=ValidateResponse)
 async def validate_endpoint(request: ValidateRequest):
     """Validate an existing MCP server definition without regenerating."""
-    if not os.getenv("ANTHROPIC_API_KEY"):
+    if not os.getenv("GEMINI_API_KEY"):
         raise HTTPException(
             status_code=503,
-            detail="ANTHROPIC_API_KEY is not configured.",
+            detail="GEMINI_API_KEY is not configured.",
         )
 
     result = await validate_code(
@@ -312,6 +312,6 @@ async def health():
     """Health check endpoint."""
     return {
         "status": "ok",
-        "api_key_configured": bool(os.getenv("ANTHROPIC_API_KEY")),
+        "api_key_configured": bool(os.getenv("GEMINI_API_KEY")),
         "active_jobs": len([j for j in jobs.values() if j.status == "running"]),
     }

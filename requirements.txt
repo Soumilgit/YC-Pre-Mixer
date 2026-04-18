@@ -1,8 +1,7 @@
 fastapi>=0.115.0
 uvicorn[standard]>=0.30.0
-anthropic>=0.40.0
+google-genai>=1.0.0
 langgraph>=0.2.50
-langchain-anthropic>=0.3.0
 langchain-core>=0.3.17
 jinja2>=3.1.4
 pydantic>=2.9.0
