@@ -1,4 +1,5 @@
 import { createBrowserClient, createServerClient } from "@supabase/ssr";
+import { NextResponse } from "next/server";
 
 // Browser client (singleton) -- stores auth in cookies for middleware access
 let browserClient = null;
@@ -22,7 +23,7 @@ export function createMiddlewareClient(request) {
 
   if (!url || !anonKey) return null;
 
-  const response = new Response();
+  const response = NextResponse.next();
 
   const supabase = createServerClient(url, anonKey, {
     cookies: {

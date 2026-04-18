@@ -41,17 +41,8 @@ export async function middleware(request) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // User is authenticated, proceed
-  const next = NextResponse.next({
-    request: { headers: request.headers },
-  });
-
-  // Forward any cookie updates from Supabase
-  response.cookies.getAll().forEach((cookie) => {
-    next.cookies.set(cookie.name, cookie.value, cookie);
-  });
-
-  return next;
+  // User is authenticated — return the response which already carries cookie updates
+  return response;
 }
 
 export const config = {
