@@ -20,7 +20,7 @@ export async function callLLM({
   temperature = 0.0,
 }) {
   const ai = getClient();
-  const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+  const model = process.env.GEMINI_MODEL || "gemini-1.5-flash-8b";
   const maxRetries = parseInt(process.env.MAX_RETRIES || "3", 10);
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
