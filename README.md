@@ -1,8 +1,4 @@
 # AgentForge - Instant MCP Server Builder
-> **Track: Architect - Agentic Infrastructure**
-> Built for YC Hackathon | Deadline: 9:00 AM IST
-
----
 
 ## The One-Line Pitch
 
@@ -48,34 +44,6 @@ AgentForge:
 
 ---
 
-## System Architecture
-
-```
-+----------------------------------------------------------+
-|                     FRONTEND (React)                      |
-|         Plain English Input -> Live Preview Output        |
-+----------------------------+-----------------------------+
-                             | HTTP POST
-+----------------------------v-----------------------------+
-|               ORCHESTRATION LAYER (FastAPI)               |
-|                                                           |
-|   +--------------+    +----------------+   +-----------+  |
-|   |  Classifier  |--->| Code Generator |--->| Validator |  |
-|   |   Agent      |    |    Agent       |   |   Agent   |  |
-|   +--------------+    +----------------+   +-----------+  |
-|         |                   |                  |          |
-|         +-------------------+------------------+          |
-|                     Claude API (Sonnet)                    |
-+----------------------------+-----------------------------+
-                             |
-+----------------------------v-----------------------------+
-|                   OUTPUT LAYER                            |
-|   Generated MCP Server Code + Claude Code Config JSON     |
-+----------------------------------------------------------+
-```
-
----
-
 ## The Agent Pipeline (How It Actually Works)
 
 ### Agent 1 - Classifier
@@ -85,7 +53,7 @@ AgentForge:
 
 ### Agent 2 - Code Generator
 - Takes the spec from Agent 1
-- Generates full MCP server using Python (`mcp` SDK)
+- Generates full MCP server using `mcp` SDK
 - Includes: tool definitions, input validation, error handling, retry logic
 
 ### Agent 3 - Validator
@@ -93,8 +61,6 @@ AgentForge:
 - Verifies MCP schema compliance
 - Flags any missing auth fields or broken imports
 - Returns a pass/fail with error explanation
-
-All 3 agents run on **Claude claude-sonnet-4-20250514** via Anthropic API.
 
 ---
 
@@ -111,50 +77,11 @@ All 3 agents run on **Claude claude-sonnet-4-20250514** via Anthropic API.
 
 ---
 
-## Project Structure
-
-```
-agentforge/
-├── README.md                  <- You are here
-├── backend/
-│   ├── main.py                <- FastAPI app entry point
-│   ├── agents/
-│   │   ├── classifier.py      <- Agent 1: intent + spec extraction
-│   │   ├── codegen.py         <- Agent 2: MCP server code generation
-│   │   └── validator.py       <- Agent 3: static validation
-│   ├── graph.py               <- LangGraph pipeline definition
-│   ├── prompts/
-│   │   ├── classifier.txt     <- System prompt for Classifier Agent
-│   │   ├── codegen.txt        <- System prompt for CodeGen Agent
-│   │   └── validator.txt      <- System prompt for Validator Agent
-│   └── templates/
-│       ├── base_server.py.j2  <- Jinja2 MCP server template
-│       └── config.json.j2     <- Claude Code config template
-├── frontend/
-│   ├── src/
-│   │   ├── App.jsx
-│   │   └── components/
-│   │       ├── PromptInput.jsx
-│   │       ├── CodePreview.jsx
-│   │       └── StatusTracker.jsx
-│   └── package.json
-├── examples/
-│   ├── notion-search/         <- Pre-built example
-│   ├── github-issues/         <- Pre-built example
-│   └── web-scraper/           <- Pre-built example
-├── .env.example
-└── requirements.txt
-```
-
----
-
 ## Getting Started
 
 ### Prerequisites
-- Python 3.11+
 - Node.js 18+
-- Anthropic API key
-- `uv` or `pip` for Python deps
+- Gemini API Key
 
 ### 1. Clone & Install
 
@@ -260,7 +187,7 @@ This system is built to not break mid-demo or in prod:
 - **Fallback templates** - if code gen fails, we return the closest matching hand-written template
 - **Async pipeline** - frontend polls status, never hangs on a single API call
 - **Structured logging** - every agent step logged with timestamps for debugging
-- **Environment guard** - clear error if `ANTHROPIC_API_KEY` is missing, not a silent crash
+- **Environment guard** - clear error if `GEMINI_API_KEY` is missing, not a silent crash
 
 ---
 
@@ -290,82 +217,3 @@ This system is built to not break mid-demo or in prod:
 | Lines of boilerplate eliminated | ~200-400 per server |
 | Target users | Any developer using Claude Code |
 | Moat | Template library + validation layer + UX |
-
----
-
-## Build Timeline (11 PM - 9 AM)
-
-| Time | Task | Owner |
-|------|------|-------|
-| 11 PM - 12 AM | FastAPI skeleton + `/generate` endpoint | Backend |
-| 12 AM - 1 AM | Classifier Agent prompt + integration | Backend |
-| 1 AM - 2 AM | CodeGen Agent + Jinja2 templates | Backend |
-| 2 AM - 3 AM | Validator Agent + retry/fallback logic | Backend |
-| 3 AM - 4 AM | LangGraph pipeline wiring | Backend |
-| 3 AM - 4 AM | React UI - input + status tracker | Frontend |
-| 4 AM - 5 AM | React UI - code preview + copy buttons | Frontend |
-| 5 AM - 6 AM | Integration testing (full pipeline E2E) | Both |
-| 6 AM - 7 AM | Polish + 3 example servers verified | Both |
-| 7 AM - 8 AM | Dry run demo x 3 | Both |
-| 8 AM - 9 AM | Buffer / fix any last-minute issues | Both |
-
----
-
-## Key Files to Write First
-
-Start in this exact order to unblock each other:
-
-1. `backend/main.py` - FastAPI app with `/generate` stub
-2. `backend/prompts/classifier.txt` - most critical prompt
-3. `backend/agents/classifier.py` - calls Claude, returns JSON spec
-4. `backend/templates/base_server.py.j2` - the MCP template
-5. `backend/agents/codegen.py` - fills template via Claude
-6. `frontend/src/App.jsx` - input -> POST -> poll status -> show result
-
----
-
-## Environment Variables
-
-```env
-ANTHROPIC_API_KEY=sk-ant-xxxxx      # Required
-CLAUDE_MODEL=claude-sonnet-4-20250514  # Do not change
-PORT=8000                           # Backend port
-MAX_RETRIES=3                       # API retry count
-LOG_LEVEL=INFO
-```
-
----
-
-## Team Split Recommendation
-
-**Person A (Backend)**
-- `backend/` - agents, graph, API
-
-**Person B (Frontend + Integration)**
-- `frontend/` - React UI
-- `examples/` - pre-built servers
-- End-to-end testing
-
-Sync at: 3 AM (integration), 6 AM (full demo dry run)
-
----
-
-## Requirements
-
-```
-# requirements.txt
-fastapi==0.115.0
-uvicorn==0.30.0
-anthropic==0.40.0
-langgraph==0.2.0
-langchain-anthropic==0.3.0
-jinja2==3.1.4
-pydantic==2.9.0
-httpx==0.27.0
-python-dotenv==1.0.0
-mcp==1.0.0
-```
-
----
-
-*Built with Claude. Powered by coffee. Ship it.*
